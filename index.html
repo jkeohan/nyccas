@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>NYCCAS Dashboard</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<link href='https://fonts.googleapis.com/css?family=Raleway:400,500,600,700,300' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.css" />
+		<link rel = "stylesheet" type="text/css" href="style.css">
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+		<script src="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.js"></script>
+	</head>
+<style>
+
+body{
+	/*font-family: arial,sans-serif;*/
+	font-family: 'Raleway', sans-serif;
+	font-weight: 400;
+}
+
+h1 {
+	font-weight: 700;
+}
+
+#map { 
+	height: 800px; 
+}
+
+.weatherCircle {
+	stroke: white;
+	fill: red;
+	opacity: 0.8;
+}
+
+div.tooltip {   
+    position: absolute;           
+    text-align: left;           
+    width: auto;                  
+    height: auto;                 
+    padding: 8px;             
+    font: 12px sans-serif;        
+    background: white;   
+    border: white 1px solid;      
+    border-radius: 0px;           
+    pointer-events: none;         
+  }
+
+.weatherCircle:hover {
+    stroke: red;
+    stroke-width: 3px;
+}
+
+.controller-button{
+	padding: 10px;
+	margin: 10px;
+}
+
+.info {
+    position: relative;
+}
+
+.info .overlay {
+    position: absolute;
+    top: 10;
+    left: 10;
+    pointer-events: none;
+}
+
+.button {
+	padding-bottom: 20px;
+}
+
+.weather {
+	float: right;
+}
+
+</style>
+
+<body>
+
+<!-- DOHMH navbar -->		
+<nav class="navbar navbar-default navbar-dohmh">
+	<div class="container-fluid">
+	    <!-- Hamberger -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand" href="http://www.nyc.gov/html/doh/html/home/home.shtml" target="_blank"></a>
+	    </div>
+
+	    <!-- Navbar menu items -->
+	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">      
+	      <ul class="nav navbar-nav navbar-right">
+	        <li><a href="http://www.nyc.gov/nyc-resources/categories.page" target="_blank">NYC Resources</a></li>
+	        <li><a href="http://www.nyc.gov/311/" target="_blank">311</a></li>
+	        <li><a href="http://www.nyc.gov/office-of-the-mayor/" target="_blank">Office of the Mayor</a></li>   
+	      </ul>
+	    </div><!-- /.navbar-collapse -->
+	</div><!-- /.container-fluid -->
+</nav>
+
+
+
+<!-- Content -->
+<div class="container-fluid info">			
+	<div class = "date col-xs-8 col-md-8">
+		<h1 class = "current-date"></h1>
+	</div>
+	<div class = "weather col-xs-4 col-md-4">
+		<h2 class = "current-cond"></h2>
+		<p class = "current-temp"></p>
+		<p class = "wind-info"></p>
+	</div>
+	
+</div>
+<div class = "container-fluid button"></div>
+<div id="map"></div>
+
+<script>
+
+//set up leaflet
+var map = L.map('map').setView([40.71, -74.00], 11);
+
+//Initialize the SVG layer
+	map._initPathRoot();   
+ 
+//specify tile map service 
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiemFrc2Nsb3NldCIsImEiOiJjaWdzZGh5ZjMwMmN1dGhrbnN6ZjFtb2NjIn0.x6b7Ra4Jdtbv38M9_uM2vQ', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18,
+    id: 'zakscloset.o4bigbgi',
+    accessToken: 'pk.eyJ1IjoiemFrc2Nsb3NldCIsImEiOiJjaWdzZGh5ZjMwMmN1dGhrbnN6ZjFtb2NjIn0.x6b7Ra4Jdtbv38M9_uM2vQ'
+}).addTo(map);
+
+//select svg
+var svg = d3.select("#map").select("svg"),
+g = svg.append("g");
+
+//tooltip
+var tooltip = d3.select("body").append("div")   
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+
+// Parse the date / time
+var parseDate = d3.time.format("%m/%d/%Y %H:%M").parse;
+
+queue()
+    .defer(d3.csv, "NYCCAS_DEC_Weather_Results.csv")
+    .await(ready);
+
+function ready(error, weather) {
+	if (error) throw error;
+
+	console.log(weather);
+
+	//create buttons
+  	var buttons = d3.select(".button").selectAll(".button")
+	    .data(["PM2.5", "CO", "NO", "NO2", "NOX", "OZONE", "SO2"])
+	    .enter()
+	    .append("button")
+	    .attr("class", "btn btn-default")
+	    .text(function(d) { return d; })
+	    .on("click", function(d) { drawResults(d); });
+	
+	//Add a LatLng object to each item in the dataset 
+	weather.forEach(function(d) {
+		d.LatLng = new L.LatLng(d.Latitude,
+								d.Longitude);
+		//format date
+		d.date = parseDate(d.StartTime);
+	});
+
+	// var transform = d3.geo.transform({ point: projectPoint }),
+ //    	path = d3.geo.path().projection(transform);
+
+	// initial data on load should be pm2.5
+  	var initialWeather = weather.filter(function(d) { return d.parameter == "PM2.5"; });
+	
+  	//show the current date and weather
+	var last = weather[weather.length - 1];
+	d3.select(".current-date").html("Air Monitoring Results for " + "<br />" + last.StartTime);
+	d3.select(".current-cond").html(last.weather);
+	d3.select(".current-temp").html(last.temp_f + " &deg;F");
+	d3.select(".wind-info").html("Wind: " + last.wind_string + "<br />" + "Windchill: " + last.windchill_f + "&deg;F" + "<br />" + "Observed @ " + last.station_id + ", " + last.Location);
+
+
+	//append pm2.5 data		
+	var weatherCircle = g.selectAll("circle")
+		.data(initialWeather)
+		.enter()
+		.append("circle")
+		.filter(function(d) { return d.StartTime == last.StartTime; })
+		.filter(function(d) { return initialWeather; })
+		.attr("class", "weatherCircle")
+		.attr('r', function(d){ return d.Value; })
+		.on("mouseover", function(d){
+	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units)
+	        .style("opacity", 0.8)
+	        .style("left", (d3.event.pageX)+6 + "px") 
+	        .style("top", (d3.event.pageY)-80 + "px");    
+      	})
+      	.on("mouseout", function(d) {      
+          	tooltip.style("opacity", 0);   
+      	});
+
+ 
+	//rescale/reposition data on zoom/pan		
+	map.on("viewreset", update);
+	update();
+
+	//update the location of circles
+	function update() {
+		weatherCircle.attr("transform", function(d) { 
+			return "translate("+ 
+				map.latLngToLayerPoint(d.LatLng).x +","+ 
+				map.latLngToLayerPoint(d.LatLng).y +")";
+		})		
+	};
+
+
+	//update the map on button-click
+	function drawResults(pollutantName) {
+
+    	var thisPollutant = weather.filter(function(d) { return d.results === pollutantName; });
+    	   	
+    	//read data join
+    	weatherCircleData = svg.selectAll(".weatherCircle")
+        	.data(thisPollutant);
+
+        weatherCircleData.exit().remove()
+	    	.transition()
+	    	.style('opacity', 0);
+
+	    // enter NEW elements from data join
+	    weatherCircleEnter = weatherCircleData.enter()   
+	        .append("g")
+	        .attr("class", "weatherCircle");
+
+	    // append new circles to this selection
+	    weatherCircleEnter.append("circle")
+	        .attr("r", function(d) { return d.results; });
+
+	    // update new selection
+	    weatherCircleData = svg.selectAll(".weatherCircle")
+	        .transition()
+	        .duration(2400)
+	        .attr("transform", function(d) {
+	          return "translate("+ 
+				map.latLngToLayerPoint(d.LatLng).x +","+ 
+				map.latLngToLayerPoint(d.LatLng).y +")";
+			})	
+		
+	    weatherCircleData.select(".weatherCircle")
+	        .attr("r", 10)
+	        .style("opacity", 0.7)
+	        .attr("fill", "red");
+
+	    d3.select("span")   
+	      .text([pollutantName]);   
+  	}
+
+};
+
+
+</script>
+</body>
