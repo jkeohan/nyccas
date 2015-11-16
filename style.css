@@ -1,3 +1,28 @@
+/*** Works on common browsers ***/
+::selection {
+	background-color: #53c2c4;	
+}
+
+/*** Mozilla based browsers ***/
+::-moz-selection {
+	background-color: #53c2c4;
+}
+  
+/***For Other Browsers ***/
+::-o-selection {
+	background-color: #53c2c4;	
+}
+ 
+::-ms-selection {
+	background-color: #53c2c4;	
+}
+   
+/*** For Webkit ***/
+::-webkit-selection {
+	background-color: #53c2c4;
+}
+
+
 a.navbar-brand {
 	background-image: url("images/dohmh_logo.png");
 	background-size: cover;
@@ -63,7 +88,7 @@ a.navbar-brand {
 	border-color: black !important;
 }
 
-.btn-primary {
+/*.btn-primary {
 	color: red !important;
 	background-color: transparent !important;
 	border-color: red !important;
@@ -75,13 +100,36 @@ a.navbar-brand {
 	color: white !important;
 	background-color: red !important;
 	border-color: red !important;
-}
+}*/
 
 
-.btn-group>.btn:first-child {
+/*.btn-group>.btn:first-child {
 	background-color: transparent !important;
 	border: none !important;
 	color: #777 !important;
 	padding: 0 !important;
+}*/
+
+.btn-default:focus {
+	outline: none !important;
+	text-decoration: none !important;
+	color: white !important;
 }
+
+.btn-default a {
+	color: black !important;
+}
+
+.btn-default a:focus {
+	color: red !important;
+}
+
+
+
+
+
+
+
+
+
 

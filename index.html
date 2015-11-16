@@ -5,21 +5,22 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<link href='https://fonts.googleapis.com/css?family=Raleway:400,500,600,700,300' rel='stylesheet' type='text/css'>
+		<link href='https://fonts.googleapis.com/css?family=Oxygen:400,300,700' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.css" />
 		<link rel = "stylesheet" type="text/css" href="style.css">
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+		
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
 		<script src="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
 	</head>
 <style>
 
 body{
 	/*font-family: arial,sans-serif;*/
-	font-family: 'Raleway', sans-serif;
+	font-family: 'Oxygen', sans-serif;
 	font-weight: 400;
 }
 
@@ -28,13 +29,20 @@ h1 {
 }
 
 #map { 
-	height: 800px; 
+	height: 500px; 
 }
 
 .weatherCircle {
-	stroke: white;
+	/*stroke: white;*/
 	fill: red;
-	opacity: 0.8;
+	opacity: 0.7;
+}
+
+.weatherCircle:hover {
+	fill: red;
+    stroke: red;
+    opacity: 1;
+    stroke-width: 10px;
 }
 
 div.tooltip {   
@@ -49,11 +57,6 @@ div.tooltip {
     border-radius: 0px;           
     pointer-events: none;         
   }
-
-.weatherCircle:hover {
-    stroke: red;
-    stroke-width: 3px;
-}
 
 .controller-button{
 	padding: 10px;
@@ -153,6 +156,7 @@ var tooltip = d3.select("body").append("div")
 // Parse the date / time
 var parseDate = d3.time.format("%m/%d/%Y %H:%M").parse;
 
+
 queue()
     .defer(d3.csv, "NYCCAS_DEC_Weather_Results.csv")
     .await(ready);
@@ -160,16 +164,8 @@ queue()
 function ready(error, weather) {
 	if (error) throw error;
 
-	console.log(weather);
+	//console.log(weather);
 
-	//create buttons
-  	var buttons = d3.select(".button").selectAll(".button")
-	    .data(["PM2.5", "CO", "NO", "NO2", "NOX", "OZONE", "SO2"])
-	    .enter()
-	    .append("button")
-	    .attr("class", "btn btn-default")
-	    .text(function(d) { return d; })
-	    .on("click", function(d) { drawResults(d); });
 	
 	//Add a LatLng object to each item in the dataset 
 	weather.forEach(function(d) {
@@ -177,33 +173,59 @@ function ready(error, weather) {
 								d.Longitude);
 		//format date
 		d.date = parseDate(d.StartTime);
+		d.value = +d.Value;
 	});
 
 	// var transform = d3.geo.transform({ point: projectPoint }),
  //    	path = d3.geo.path().projection(transform);
 
-	// initial data on load should be pm2.5
-  	var initialWeather = weather.filter(function(d) { return d.parameter == "PM2.5"; });
-	
-  	//show the current date and weather
-	var last = weather[weather.length - 1];
-	d3.select(".current-date").html("Air Monitoring Results for " + "<br />" + last.StartTime);
-	d3.select(".current-cond").html(last.weather);
-	d3.select(".current-temp").html(last.temp_f + " &deg;F");
-	d3.select(".wind-info").html("Wind: " + last.wind_string + "<br />" + "Windchill: " + last.windchill_f + "&deg;F" + "<br />" + "Observed @ " + last.station_id + ", " + last.Location);
+  	//create an array by starttime and pollutant
+  	var nestedByDate = d3.nest()
+  			.key(function(d) { return d.StartTime; })
+			.key(function(d) { return d.parameter; })
+  			//.map(weather);
+  			.entries(weather);
 
+	//console.log(nestedByDate);
 
+	//get the latest date
+	var last = Object(nestedByDate).reverse()[1];
+	console.log(last);
+
+	//create buttons
+  	var buttons = d3.select(".button").selectAll(".button")
+	    .data(["PM2.5", "CO", "NO", "NO2", "NOX", "SO2", "OZONE"])
+	    .enter()
+	    .append("button")
+	    .attr("class", "btn btn-default")
+	    .text(function(d) { return d; })
+	    .on("click", function(d) { drawResults(d); });
+
+	//most recent data for pm2.5
+	var pm25 = last.values[7];
+	console.log(pm25);
+
+	//print latest data collection time and weather info
+   	d3.select(".current-date").html("Air Monitoring Results for " + "<br />" + last.key);
+	d3.select(".current-cond").html(pm25.values[0]["weather"]);
+	d3.select(".current-temp").html(pm25.values[0]["temp_f"] + " &deg;F");
+	d3.select(".wind-info").html("Wind: " + pm25.values[0]["wind_string"] + "<br />" + "Windchill: " + pm25.values[0]["windchill_f"] + "&deg;F" + "<br />" + "(Observed @ " + pm25.values[0]["station_id"] + ", " + pm25.values[0]["Location"] + ")");
+
+	var radius = d3.scale.sqrt()
+    .domain([-5, 10])
+    .range([5, 25]);
+
+   
 	//append pm2.5 data		
 	var weatherCircle = g.selectAll("circle")
-		.data(initialWeather)
+		.data(pm25.values)
 		.enter()
 		.append("circle")
-		.filter(function(d) { return d.StartTime == last.StartTime; })
-		.filter(function(d) { return initialWeather; })
 		.attr("class", "weatherCircle")
-		.attr('r', function(d){ return d.Value; })
+		.attr("r", function(d) { return radius(d.Value)})
 		.on("mouseover", function(d){
-	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units)
+	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
+	        	+ "<br />" + d.StartTime)
 	        .style("opacity", 0.8)
 	        .style("left", (d3.event.pageX)+6 + "px") 
 	        .style("top", (d3.event.pageY)-80 + "px");    
@@ -212,12 +234,12 @@ function ready(error, weather) {
           	tooltip.style("opacity", 0);   
       	});
 
- 
+
 	//rescale/reposition data on zoom/pan		
 	map.on("viewreset", update);
 	update();
 
-	//update the location of circles
+	//function to update the location of circles
 	function update() {
 		weatherCircle.attr("transform", function(d) { 
 			return "translate("+ 
@@ -227,45 +249,59 @@ function ready(error, weather) {
 	};
 
 
+
 	//update the map on button-click
-	function drawResults(pollutantName) {
+	function drawResults(pollutant) {
 
-    	var thisPollutant = weather.filter(function(d) { return d.results === pollutantName; });
-    	   	
-    	//read data join
-    	weatherCircleData = svg.selectAll(".weatherCircle")
-        	.data(thisPollutant);
+		// var co = last.values[0];
+		// var no = last.values[1];
+		// var no2 = last.values[2];
+		// var nox = last.values[3];
+		// var ozone = last.values[4];
+		// var pm10 = last.values[6];
+		// var so2 = last.values[9];
 
-        weatherCircleData.exit().remove()
-	    	.transition()
-	    	.style('opacity', 0);
+		var thisPollutant = last.values.key;
 
-	    // enter NEW elements from data join
-	    weatherCircleEnter = weatherCircleData.enter()   
-	        .append("g")
-	        .attr("class", "weatherCircle");
+    	console.log("You clicked on " + thisPollutant);
 
-	    // append new circles to this selection
-	    weatherCircleEnter.append("circle")
-	        .attr("r", function(d) { return d.results; });
+	
+   //  	//read data join
+   //  	weatherCircleData = svg.selectAll(".weatherCircle")
+   //      	.data(thisPollutant);
 
-	    // update new selection
-	    weatherCircleData = svg.selectAll(".weatherCircle")
-	        .transition()
-	        .duration(2400)
-	        .attr("transform", function(d) {
-	          return "translate("+ 
-				map.latLngToLayerPoint(d.LatLng).x +","+ 
-				map.latLngToLayerPoint(d.LatLng).y +")";
-			})	
+   //      weatherCircleData.exit().remove()
+	  //   	.transition()
+	  //   	.style('opacity', 0);
+
+	  //   // enter NEW elements from data join
+	  //   weatherCircleEnter = weatherCircleData.enter()   
+	  //       .append("g")
+	  //       .attr("class", "weatherCircle");
+
+	  //   // append new circles to this selection
+	  //   weatherCircleEnter.append("circle")
+	  //   	//.filter(function(d) { return d.StartTime == last.StartTime; })
+	  // 		.filter(function(d) { return d.pollutant == thisPollutant; })
+	  //       .attr("r", function(d) { return d.value; });
+
+	  //   // update new selection
+	  //   weatherCircleData = svg.selectAll(".weatherCircle")
+	  //       .transition()
+	  //       .duration(2400)
+	  //       .attr("transform", function(d) {
+	  //         return "translate("+ 
+			// 	map.latLngToLayerPoint(d.LatLng).x +","+ 
+			// 	map.latLngToLayerPoint(d.LatLng).y +")";
+			// })	
 		
-	    weatherCircleData.select(".weatherCircle")
-	        .attr("r", 10)
-	        .style("opacity", 0.7)
-	        .attr("fill", "red");
+	    // weatherCircleData.select(".weatherCircle")
+	    //     .attr("r", 10)
+	    //     .style("opacity", 0.7)
+	    //     .attr("fill", "red");
 
-	    d3.select("span")   
-	      .text([pollutantName]);   
+	    // d3.select("span")   
+	    //   .text([pollutant]);   
   	}
 
 };
