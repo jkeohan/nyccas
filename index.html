@@ -211,11 +211,15 @@ function ready(error, weather) {
 	d3.select(".current-temp").html(pm25.values[0]["temp_f"] + " &deg;F");
 	d3.select(".wind-info").html("Wind: " + pm25.values[0]["wind_string"] + "<br />" + "Windchill: " + pm25.values[0]["windchill_f"] + "&deg;F" + "<br />" + "(Observed @ " + pm25.values[0]["station_id"] + ", " + pm25.values[0]["Location"] + ")");
 
-	var radius = d3.scale.sqrt()
-    .domain([-5, 10])
-    .range([5, 25]);
-
-   
+	//determine the extent of the pm2.5 values
+	console.log(d3.extent(pm25.values.map(function(d) { return (d.Value);}))); 
+	var rExtent = d3.extent(pm25.values.map(function(d) { return (d.value); }));
+	console.log(rExtent);
+	var radius = d3.scale.linear()
+	    .domain(rExtent)
+	    .range([5, 25]);
+	  
+       
 	//append pm2.5 data		
 	var weatherCircle = g.selectAll("circle")
 		.data(pm25.values)
