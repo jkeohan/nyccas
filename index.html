@@ -220,6 +220,7 @@ function ready(error, data) {
 	d3.select(".current-cond").html(pm25.values[0]["weather"]);
 	d3.select(".current-temp").html(pm25.values[0]["temp_f"] + " &deg;F");
 	d3.select(".wind-info").html("Wind: " + pm25.values[0]["wind_string"] + "<br />" + "Windchill: " + pm25.values[0]["windchill_f"] + "&deg;F" + "<br />" + "(Observed @ " + pm25.values[0]["station_id"] + ", " + pm25.values[0]["Location"] + ")");
+	d3.select(".pollutant-name").html(pm25.key);
 
 	//determine the extent of the pm2.5 values
 	console.log(d3.extent(pm25.values.map(function(d) { return (d.Value);}))); 
@@ -269,19 +270,19 @@ function ready(error, data) {
 		//var thisPollutant = latest.values; 
 		//var thisPollutant = latest.values[(function(d) { return d.key; })];		
 		var thisPollutant = data.filter(function(d) { return d.parameter === pollutant; });
-		console.log(thisPollutant);
+		//console.log(thisPollutant);
 
-		console.log(thisPollutant);
-	
-		var thisLatestPollutant = thisPollutant.filter(function(d) { return d.StartTime === "11/12/15 12:00"; });
+		//get the last date
+		var lastDate = thisPollutant.map(function(d) { return d.StartTime; });
+		var thisLatestPollutant = thisPollutant.filter(function(d) { return d.StartTime === lastDate[lastDate.length-1]; });
     	console.log(thisLatestPollutant);
 
     	//determine the extent of values for each pollutant
 		console.log(d3.extent(thisLatestPollutant.map(function(d) { return (d.Value);}))); 
-		var rExtent = d3.extent(thisLatestPollutant.map(function(d) { return (d.value); }));
-		console.log(rExtent);
-		var radius = d3.scale.linear()
-		    .domain(rExtent)
+		var rExtentEach = d3.extent(thisLatestPollutant.map(function(d) { return (d.value); }));
+		console.log(rExtentEach);
+		var radiusEach = d3.scale.linear()
+		    .domain(rExtentEach)
 		    .range([5, 25]);
     		
     	//read data join
@@ -297,7 +298,7 @@ function ready(error, data) {
 	        .append("g")
 			.append("circle")
 	    	.attr("class", "weatherCircle")
-	        .attr("r", function(d) { return radius(d.Value); })
+	        .attr("r", function(d) { return radiusEach(d.Value); })
 	        .on("mouseover", function(d){
 	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
 	        	+ "<br />" + d.StartTime)
