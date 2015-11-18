@@ -21,7 +21,8 @@
 body{
 	/*font-family: arial,sans-serif;*/
 	font-family: 'Oxygen', sans-serif;
-	font-weight: 400;
+	font-weight: 300;
+	overflow: none;
 }
 
 h1 {
@@ -82,6 +83,15 @@ div.tooltip {
 	float: right;
 }
 
+.pollutant-name {
+	opacity: 0.5;
+	font-weight: 300;
+}
+
+.current-date {
+	font-weight: 700;
+}
+
 </style>
 
 <body>
@@ -117,6 +127,7 @@ div.tooltip {
 <div class="container-fluid info">			
 	<div class = "date col-xs-8 col-md-8">
 		<h1 class = "current-date"></h1>
+		<h1 class = "pollutant-name"></h1>
 	</div>
 	<div class = "weather col-xs-4 col-md-4">
 		<h2 class = "current-cond"></h2>
@@ -161,14 +172,13 @@ queue()
     .defer(d3.csv, "NYCCAS_DEC_Weather_Results.csv")
     .await(ready);
 
-function ready(error, weather) {
+function ready(error, data) {
 	if (error) throw error;
 
-	//console.log(weather);
-
+	//console.log(data);
 	
 	//Add a LatLng object to each item in the dataset 
-	weather.forEach(function(d) {
+	data.forEach(function(d) {
 		d.LatLng = new L.LatLng(d.Latitude,
 								d.Longitude);
 		//format date
@@ -183,30 +193,30 @@ function ready(error, weather) {
   	var nestedByDate = d3.nest()
   			.key(function(d) { return d.StartTime; })
 			.key(function(d) { return d.parameter; })
-  			//.map(weather);
-  			.entries(weather);
+  			//.map(data);
+  			.entries(data);
 
 	//console.log(nestedByDate);
 
-	//get the latest date
-	var last = Object(nestedByDate).reverse()[1];
-	console.log(last);
+	//get the latest data for all pullutants
+	var latest = Object(nestedByDate).reverse()[1];
+	console.log(latest);
 
 	//create buttons
   	var buttons = d3.select(".button").selectAll(".button")
-	    .data(["PM2.5", "CO", "NO", "NO2", "NOX", "SO2", "OZONE"])
+	    .data(latest.values.map(function(d) { return (d.key); }))
 	    .enter()
 	    .append("button")
 	    .attr("class", "btn btn-default")
 	    .text(function(d) { return d; })
 	    .on("click", function(d) { drawResults(d); });
 
-	//most recent data for pm2.5
-	var pm25 = last.values[7];
+	//get the latest data for pm2.5
+	var pm25 = latest.values[7];
 	console.log(pm25);
 
-	//print latest data collection time and weather info
-   	d3.select(".current-date").html("Air Monitoring Results for " + "<br />" + last.key);
+	//print latest data collection date/time and weather info
+   	d3.select(".current-date").html("Air Monitoring Results for " + "<br />" + latest.key);
 	d3.select(".current-cond").html(pm25.values[0]["weather"]);
 	d3.select(".current-temp").html(pm25.values[0]["temp_f"] + " &deg;F");
 	d3.select(".wind-info").html("Wind: " + pm25.values[0]["wind_string"] + "<br />" + "Windchill: " + pm25.values[0]["windchill_f"] + "&deg;F" + "<br />" + "(Observed @ " + pm25.values[0]["station_id"] + ", " + pm25.values[0]["Location"] + ")");
@@ -218,8 +228,7 @@ function ready(error, weather) {
 	var radius = d3.scale.linear()
 	    .domain(rExtent)
 	    .range([5, 25]);
-	  
-       
+	        
 	//append pm2.5 data		
 	var weatherCircle = g.selectAll("circle")
 		.data(pm25.values)
@@ -229,7 +238,7 @@ function ready(error, weather) {
 		.attr("r", function(d) { return radius(d.Value)})
 		.on("mouseover", function(d){
 	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
-	        	+ "<br />" + d.StartTime)
+	        	+ "<br />" + "Measured at " + d.Location + "<br />" + d.StartTime)
 	        .style("opacity", 0.8)
 	        .style("left", (d3.event.pageX)+6 + "px") 
 	        .style("top", (d3.event.pageY)-80 + "px");    
@@ -237,7 +246,6 @@ function ready(error, weather) {
       	.on("mouseout", function(d) {      
           	tooltip.style("opacity", 0);   
       	});
-
 
 	//rescale/reposition data on zoom/pan		
 	map.on("viewreset", update);
@@ -253,59 +261,71 @@ function ready(error, weather) {
 	};
 
 
-
 	//update the map on button-click
+	//(I'm using the raw data instead of nested data for this function for now. Will update this code later.
 	function drawResults(pollutant) {
 
-		// var co = last.values[0];
-		// var no = last.values[1];
-		// var no2 = last.values[2];
-		// var nox = last.values[3];
-		// var ozone = last.values[4];
-		// var pm10 = last.values[6];
-		// var so2 = last.values[9];
+		// var co = latest.values[0];
+		//var thisPollutant = latest.values; 
+		//var thisPollutant = latest.values[(function(d) { return d.key; })];		
+		var thisPollutant = data.filter(function(d) { return d.parameter === pollutant; });
+		console.log(thisPollutant);
 
-		var thisPollutant = last.values.key;
-
-    	console.log("You clicked on " + thisPollutant);
-
+		console.log(thisPollutant);
 	
-   //  	//read data join
-   //  	weatherCircleData = svg.selectAll(".weatherCircle")
-   //      	.data(thisPollutant);
+		var thisLatestPollutant = thisPollutant.filter(function(d) { return d.StartTime === "11/12/15 12:00"; });
+    	console.log(thisLatestPollutant);
 
-   //      weatherCircleData.exit().remove()
-	  //   	.transition()
-	  //   	.style('opacity', 0);
+    	//determine the extent of values for each pollutant
+		console.log(d3.extent(thisLatestPollutant.map(function(d) { return (d.Value);}))); 
+		var rExtent = d3.extent(thisLatestPollutant.map(function(d) { return (d.value); }));
+		console.log(rExtent);
+		var radius = d3.scale.linear()
+		    .domain(rExtent)
+		    .range([5, 25]);
+    		
+    	//read data join
+    	pollutionData = svg.selectAll(".weatherCircle")
+        	.data(thisLatestPollutant);
 
-	  //   // enter NEW elements from data join
-	  //   weatherCircleEnter = weatherCircleData.enter()   
-	  //       .append("g")
-	  //       .attr("class", "weatherCircle");
+        pollutionData.exit().remove()
+	    	.transition()
+	    	.style('opacity', 0);
 
-	  //   // append new circles to this selection
-	  //   weatherCircleEnter.append("circle")
-	  //   	//.filter(function(d) { return d.StartTime == last.StartTime; })
-	  // 		.filter(function(d) { return d.pollutant == thisPollutant; })
-	  //       .attr("r", function(d) { return d.value; });
+	    // enter NEW elements from data join
+	    pollutionDataEnter = pollutionData.enter()   
+	        .append("g")
+			.append("circle")
+	    	.attr("class", "weatherCircle")
+	        .attr("r", function(d) { return radius(d.Value); })
+	        .on("mouseover", function(d){
+	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
+	        	+ "<br />" + d.StartTime)
+	        .style("opacity", 0.8)
+	        .style("left", (d3.event.pageX)+6 + "px") 
+	        .style("top", (d3.event.pageY)-80 + "px");    
+      	})
+      	.on("mouseout", function(d) {      
+          	tooltip.style("opacity", 0);   
+      	});;
 
-	  //   // update new selection
-	  //   weatherCircleData = svg.selectAll(".weatherCircle")
-	  //       .transition()
-	  //       .duration(2400)
-	  //       .attr("transform", function(d) {
-	  //         return "translate("+ 
-			// 	map.latLngToLayerPoint(d.LatLng).x +","+ 
-			// 	map.latLngToLayerPoint(d.LatLng).y +")";
-			// })	
+	    // update new selection
+	    pollutionData = svg.selectAll(".weatherCircle")
+	        .transition()
+	        .duration(2400)
+	        .attr("transform", function(d) {
+	          return "translate("+ 
+				map.latLngToLayerPoint(d.LatLng).x +","+ 
+				map.latLngToLayerPoint(d.LatLng).y +")";
+			})	
 		
-	    // weatherCircleData.select(".weatherCircle")
-	    //     .attr("r", 10)
-	    //     .style("opacity", 0.7)
-	    //     .attr("fill", "red");
+	    pollutionData.select(".weatherCircle")
+	        .attr("r", 10)
+	        .style("opacity", 0.7)
+	        .attr("fill", "red");
 
-	    // d3.select("span")   
-	    //   .text([pollutant]);   
+	    d3.select(".pollutant-name")   
+	      .text([pollutant]);   
   	}
 
 };
