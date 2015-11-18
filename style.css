@@ -91,8 +91,8 @@ a.navbar-brand {
 
 .btn-default {
 	color: black !important;
-	background: transparent !important;
-	border-color: black !important;
+	/*background: transparent !important;*/
+	border: black 0px solid !important;
 	padding: 2% !important;
 }
 
@@ -105,7 +105,11 @@ a.navbar-brand {
 .btn-default:focus {
 	outline: none !important;
 	text-decoration: none !important;
-	color: white !important;
+	color: black !important;
+}
+
+.btn-default:active {
+	background: orange !important;
 }
 
 .btn-default a {

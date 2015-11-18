@@ -263,12 +263,11 @@ function ready(error, data) {
 
 
 	//update the map on button-click
-	//(I'm using the raw data instead of nested data for this function for now. Will update this code later.
+	//(I'm using the raw data instead of nested data for this function for now. Will update this code later.)
 	function drawResults(pollutant) {
 
 		// var co = latest.values[0];
-		//var thisPollutant = latest.values; 
-		//var thisPollutant = latest.values[(function(d) { return d.key; })];		
+		//var thisPollutant = latest.values; 		
 		var thisPollutant = data.filter(function(d) { return d.parameter === pollutant; });
 		//console.log(thisPollutant);
 
@@ -308,23 +307,30 @@ function ready(error, data) {
       	})
       	.on("mouseout", function(d) {      
           	tooltip.style("opacity", 0);   
-      	});;
+      	});
 
-	    // update new selection
-	    pollutionData = svg.selectAll(".weatherCircle")
-	        .transition()
-	        .duration(2400)
-	        .attr("transform", function(d) {
-	          return "translate("+ 
-				map.latLngToLayerPoint(d.LatLng).x +","+ 
-				map.latLngToLayerPoint(d.LatLng).y +")";
-			})	
-		
-	    pollutionData.select(".weatherCircle")
-	        .attr("r", 10)
-	        .style("opacity", 0.7)
-	        .attr("fill", "red");
+		//rescale/reposition data on zoom/pan		
+		map.on("viewreset", updateEach);
+		updateEach();
 
+		//function to update the location of circles
+		 function updateEach() {
+
+			pollutionData = svg.selectAll(".weatherCircle")
+		        .transition()
+		        .duration(1000)
+		        .attr("transform", function(d) {
+		          return "translate("+ 
+					map.latLngToLayerPoint(d.LatLng).x +","+ 
+					map.latLngToLayerPoint(d.LatLng).y +")";
+				})	
+				.select(".weatherCircle")
+				.attr("r", function(d) { return radiusEach(d.Value); })
+				// .style("opacity", 0.7)
+				// .attr("fill", "red");
+		};
+
+	    //print pollutant name on title
 	    d3.select(".pollutant-name")   
 	      .text([pollutant]);   
   	}
