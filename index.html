@@ -219,7 +219,7 @@ function ready(error, data) {
    	d3.select(".current-date").html("Air Monitoring Results for " + "<br />" + latest.key);
 	d3.select(".current-cond").html(pm25.values[0]["weather"]);
 	d3.select(".current-temp").html(pm25.values[0]["temp_f"] + " &deg;F");
-	d3.select(".wind-info").html("Wind: " + pm25.values[0]["wind_string"] + "<br />" + "Windchill: " + pm25.values[0]["windchill_f"] + "&deg;F" + "<br />" + "(Observed @ " + pm25.values[0]["station_id"] + ", " + pm25.values[0]["Location"] + ")");
+	d3.select(".wind-info").html("Wind from the " + pm25.values[0]["wind_dir"] + " at " + pm25.values[0]["wind_mph"] + " mph, gusting to " + pm25.values[0]["wind_gust_mph"] + " mph. Windchill at " + pm25.values[0]["windchill_f"] + "&deg;F." + "<br />" + "(Observed @ " + pm25.values[0]["station_id"] + ") ");
 	d3.select(".pollutant-name").html(pm25.key);
 
 	//determine the extent of the pm2.5 values
@@ -238,7 +238,7 @@ function ready(error, data) {
 		.attr("class", "weatherCircle")
 		.attr("r", function(d) { return radius(d.Value)})
 		.on("mouseover", function(d){
-	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
+	        tooltip.html("<h4>" + d.Site + "</h4>" + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
 	        	+ "<br />" + "Measured at " + d.Location + "<br />" + d.StartTime)
 	        .style("opacity", 0.8)
 	        .style("left", (d3.event.pageX)+6 + "px") 
@@ -299,8 +299,8 @@ function ready(error, data) {
 	    	.attr("class", "weatherCircle")
 	        .attr("r", function(d) { return radiusEach(d.Value); })
 	        .on("mouseover", function(d){
-	        tooltip.html(d.Site + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
-	        	+ "<br />" + d.StartTime)
+	        tooltip.html("<h4>" + d.Site + "</h4>" + "<br />" + d.Address + "<br />" + d.parameter + " = " + d.Value + " " + d.Units 
+	        	+ "<br />" + "Measured at " + d.Location + "<br />" + d.StartTime)
 	        .style("opacity", 0.8)
 	        .style("left", (d3.event.pageX)+6 + "px") 
 	        .style("top", (d3.event.pageY)-80 + "px");    
