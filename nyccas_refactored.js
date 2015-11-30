@@ -8,15 +8,19 @@ d3.csv("NYCCAS_DEC_Weather_Results.csv", convert, function(data) {
 			// .key(function(d) { return d.parameter; })
   		.entries(data);
 
+  	
+
+  	currentDayExtentVals(nestedByDate)
+
   	initMap()
   	init(nestedByDate)
+
 })
 
 function init(data,pollutant) { 
 		initGas = "CO ";
 		//select svg
-		svg = d3.select("#map").select("svg"),
-		g = svg.append("g");
+		svg = d3.select("#map").select("svg")
 		//tooltip
 		tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 		gases = d3.set(data.map(function(d) { return d["key"]})).values()
@@ -26,7 +30,8 @@ function init(data,pollutant) {
 		drawResults(initGasData,initGas)
 		//Load buttons
 		initButtons(gases)
-	
+		legend(currentDayExtentVals(data),svg) 
+
 }
 
 function initButtons(keys) {
@@ -72,15 +77,28 @@ function convert(d) {
 	return d;
 } 
 
+function currentDayExtentVals(data) {
+   var newArray = []
+    var extentAllData = data.map(function(d) { return d.values[0].values.map(function(r) { return r["Value"] }) } )
+    var a = d3.values(extentAllData.map(function(d) { return d.map(function(d,i) { return d } ) } ) )
+    a.map(function(d) { for( i = 0; i < d.length; i++) { newArray.push(d[i]) } } ) 
+    var newExtent = d3.extent(newArray.map(function(d) { return d } ) )
+    console.log(newExtent)
+
+    return newExtent
+}
+
 function drawResults(data,pollutant) {
 		var thisPollutant = data.filter(function(d) {; return d["key"] == pollutant })
-
 		//get the last date
 		var lastDate = thisPollutant[0].values[0]
 		lastDate.values.sort(function(d) { return d.Value } )
     //determine the extent of values for each pollutant
+
 		var rExtentEach = d3.extent(lastDate.values.map(function(d) { return (+d.Value); })).sort(d3.ascending);
-		var radius = d3.scale.ordinal().domain(rExtentEach).range([5, 10])
+		//var radius = d3.scale.ordinal().domain(rExtentEach).range([5, 10])
+		var radius = d3.scale.linear().domain(currentDayExtentVals(nestedByDate)).range([5, 25])
+		debugger;
 		colorScale = d3.scale.category10().domain(gases)
   	//DATA JOIN
   	pollutionData = svg.selectAll(".weatherCircle").data(function(d) { return lastDate.values });
@@ -103,10 +121,37 @@ function drawResults(data,pollutant) {
 	    weatherInfo(data,pollutant);
 }
 
+function legend(data,svg) {
+	var linearSize = d3.scale.linear().domain(data).range([5,25]);
+	var legend = svg//.attr("height",90).attr("width",500)
+
+	var g = legend.append("g")
+	  .attr("class", "legendSize")
+	  .attr("transform", "translate(20, 40)");
+
+	var legendSize = d3.legend.size()
+		.cells(8)
+	  .scale(linearSize)
+	  .shape('circle')
+	  .shapePadding(30)
+	  .labelOffset(20)
+	  .orient('horizontal');
+
+	legend.select(".legendSize")
+	  .call(legendSize);
+}
+
+function makeActive(selection) {
+		d3.selectAll(".active").classed("active",false).attr('style','border: solid 0px black !important;')
+		selection.classed("active",true).attr('style', 
+			function(d){ return 'border: solid 2px ' + colorScale(d) + ' !important;' })
+}
+
 function mouseover(d) {
+
 	var circle = d3.select(d)[0][0]
-		radius = circle.attr("r")
-		newRadius = +radius + 10
+		circleRadius = circle.attr("r")
+		newRadius = +circleRadius + 10
     circle.transition().duration(500).ease("sin")
         .attr("r",newRadius )
         .attr("stroke","rgba(230,230,230, .8)")
@@ -116,14 +161,8 @@ function mouseover(d) {
 function mouseout(d) {
 	var circle = d3.select(d)[0][0]
   	 circle.transition().duration(500).ease("sin")
-	    .attr("r",radius)
+	    .attr("r",circleRadius)
 	    .attr("stroke-width", 0)
-}
-
-function makeActive(selection) {
-		d3.selectAll(".active").classed("active",false).attr('style','border: solid 0px black !important;')
-		selection.classed("active",true).attr('style', 
-			function(d){ return 'border: solid 2px ' + colorScale(d) + ' !important;' })
 }
 
 function tooltips(d) {
@@ -154,7 +193,6 @@ function weatherInfo(data,pollutant) {
 		d3.select(".last-date").html(current["StartTime"]);
 		d3.select(".current-cond").html(current["weather"]);
 		d3.select(".current-temp").html(current["temp_f"] + " &deg;F");
-
 		d3.select(".wind-info").html("Wind from the " + current["wind_dir"] + " at " + current["wind_mph"] + " mph, gusting to " + current["wind_gust_mph"] + " mph. Windchill at " + current["windchill_f"] + "&deg;F." + "<br />" + "(Observed @ " + current["station_id"] + ") ");
 		//d3.select(".pollutant-name").html(data[0]["key"]);
 		d3.select(".pollutant-name").append("text").text(pollutant).style("color",function(d) { return colorScale(pollutant) } )
