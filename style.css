@@ -83,10 +83,12 @@ a.navbar-brand {
 .btn {
 	border-radius: 0px !important;
 	transition: linear, ease-in 0.3s !important;
+	outline-color: blue;
 }
 
 .btn:focus {
-	color: white !important;
+	/*color: white !important;*/
+	color: black !important;
 }
 
 .btn-default {
@@ -105,7 +107,8 @@ a.navbar-brand {
 .btn-default:focus {
 	outline: none !important;
 	text-decoration: none !important;
-	color: black !important;
+	/*color: black !important;*/
+	/*color: white !important;*/
 }
 
 .btn-default:active {
@@ -120,8 +123,84 @@ a.navbar-brand {
 	color: red !important;
 }
 
+.weatherCircle:hover {
+	cursor:pointer;
+}
 
 
+body{
+	/*font-family: arial,sans-serif;*/
+	font-family: 'Oxygen', sans-serif;
+	font-weight: 300;
+	overflow: none;
+}
+
+h1 {
+	font-weight: 700;
+}
+
+#map { 
+	height: 500px; 
+}
+
+.weatherCircle {
+	/*stroke: white;*/
+/*	fill: red;*/
+	opacity: 0.7;
+}
+
+.weatherCircle:hover {
+/*	fill: red;
+    stroke: red;*/
+    opacity: 1;
+/*    stroke-width: 10px;*/
+}
+
+div.tooltip {   
+    position: absolute;           
+    text-align: left;           
+    width: auto;                  
+    height: auto;                 
+    padding: 8px;             
+    font: 12px sans-serif;        
+    background: white;   
+    border: white 1px solid;      
+    border-radius: 0px;           
+    pointer-events: none;         
+  }
+
+.controller-button{
+	padding: 10px;
+	margin: 10px;
+}
+
+.info {
+    position: relative;
+}
+
+.info .overlay {
+    position: absolute;
+    top: 10;
+    left: 10;
+    pointer-events: none;
+}
+
+.button {
+	padding-bottom: 20px;
+}
+
+.weather {
+	float: right;
+}
+
+.pollutant-name {
+	opacity: 0.5;
+	font-weight: 300;
+}
+
+.current-date {
+	font-weight: 700;
+}
 
 
 
