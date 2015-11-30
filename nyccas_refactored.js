@@ -74,6 +74,7 @@ function convert(d) {
 
 function drawResults(data,pollutant) {
 		var thisPollutant = data.filter(function(d) {; return d["key"] == pollutant })
+
 		//get the last date
 		var lastDate = thisPollutant[0].values[0]
 		lastDate.values.sort(function(d) { return d.Value } )
@@ -106,10 +107,10 @@ function mouseover(d) {
 	var circle = d3.select(d)[0][0]
 		radius = circle.attr("r")
 		newRadius = +radius + 10
-
     circle.transition().duration(500).ease("sin")
         .attr("r",newRadius )
         .attr("stroke","rgba(230,230,230, .8)")
+        .attr("stroke-width", 10 )
 }
 
 function mouseout(d) {

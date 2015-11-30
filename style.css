@@ -22,6 +22,8 @@
 	background-color: #53c2c4;
 }
 
+
+
 a {
 	color: black;
 }
@@ -127,18 +129,6 @@ a.navbar-brand {
 	cursor:pointer;
 }
 
-
-body{
-	/*font-family: arial,sans-serif;*/
-	font-family: 'Oxygen', sans-serif;
-	font-weight: 300;
-	overflow: none;
-}
-
-h1 {
-	font-weight: 700;
-}
-
 #map { 
 	height: 500px; 
 }
@@ -153,7 +143,7 @@ h1 {
 /*	fill: red;
     stroke: red;*/
     opacity: 1;
-/*    stroke-width: 10px;*/
+/*  stroke-width: 10px;*/
 }
 
 div.tooltip {   
@@ -201,6 +191,9 @@ div.tooltip {
 .current-date {
 	font-weight: 700;
 }
+
+
+
 
 
 
