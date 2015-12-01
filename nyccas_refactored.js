@@ -47,7 +47,7 @@ function initButtons(keys) {
 }
 
 function initMap() {
-		map = L.map('map').setView([40.71, -74.00], 10);
+		map = L.map('map', {scrollWheelZoom:false}).setView([40.71, -74.00], 10);
 	//Initialize the SVG layer
 		map._initPathRoot();   	 
 	//specify tile map service 
@@ -74,13 +74,16 @@ function convert(d) {
 } 
 
 function currentDayExtentVals(data) {
+
    var newArray = []
     var extentAllData = data.map(function(d) { return d.values[0].values.map(function(r) { return r["Value"] }) } )
     var a = d3.values(extentAllData.map(function(d) { return d.map(function(d,i) { return d } ) } ) )
     a.map(function(d) { for( i = 0; i < d.length; i++) { newArray.push(d[i]) } } ) 
-    var newExtent = d3.extent(newArray.map(function(d) {  return +d3.format('f')(d) } ) )
+    var newExtent = d3.extent(newArray.map(function(d) {  return +d3.format('f')(d)} ) )
     return newExtent
 }
+
+
 
 function drawResults(data,pollutant) {
 		var thisPollutant = data.filter(function(d) {; return d["key"] == pollutant })
