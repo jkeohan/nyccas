@@ -131,6 +131,7 @@ a.navbar-brand {
 
 #map { 
 	height: 500px; 
+
 }
 
 .weatherCircle {
@@ -192,6 +193,9 @@ div.tooltip {
 	font-weight: 700;
 }
 
+.cell .label {
+	font-size: 100%;
+}
 
 
 

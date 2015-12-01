@@ -4,30 +4,26 @@ d3.csv("NYCCAS_DEC_Weather_Results.csv", convert, function(data) {
   	nestedByDate = d3.nest()
   		.key(function(d) { return d.parameter; })
 			.key(function(d) { return d.StartTime; }).sortKeys(d3.descending)
-  		// 	.key(function(d) { return d.StartTime; }).sortKeys(d3.descending)
-			// .key(function(d) { return d.parameter; })
   		.entries(data);
 
-  	
-
   	currentDayExtentVals(nestedByDate)
+  	initGas = "CO "
 
   	initMap()
-  	init(nestedByDate)
+  	init(nestedByDate,initGas)
 
 })
 
 function init(data,pollutant) { 
-		initGas = "CO ";
 		//select svg
 		svg = d3.select("#map").select("svg")
 		//tooltip
 		tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 		gases = d3.set(data.map(function(d) { return d["key"]})).values()
 		//Filter pm2.5 data 
-		var initGasData = data.filter(function(d) { return d["key"] == initGas})
+		var pollutantData = data.filter(function(d) { return d["key"] == pollutant})
 		//Load pm2.5
-		drawResults(initGasData,initGas)
+		drawResults(pollutantData,pollutant)
 		//Load buttons
 		initButtons(gases)
 		legend(currentDayExtentVals(data),svg) 
@@ -82,9 +78,7 @@ function currentDayExtentVals(data) {
     var extentAllData = data.map(function(d) { return d.values[0].values.map(function(r) { return r["Value"] }) } )
     var a = d3.values(extentAllData.map(function(d) { return d.map(function(d,i) { return d } ) } ) )
     a.map(function(d) { for( i = 0; i < d.length; i++) { newArray.push(d[i]) } } ) 
-    var newExtent = d3.extent(newArray.map(function(d) { return d } ) )
-    console.log(newExtent)
-
+    var newExtent = d3.extent(newArray.map(function(d) {  return +d3.format('f')(d) } ) )
     return newExtent
 }
 
@@ -98,7 +92,7 @@ function drawResults(data,pollutant) {
 		var rExtentEach = d3.extent(lastDate.values.map(function(d) { return (+d.Value); })).sort(d3.ascending);
 		//var radius = d3.scale.ordinal().domain(rExtentEach).range([5, 10])
 		var radius = d3.scale.linear().domain(currentDayExtentVals(nestedByDate)).range([5, 25])
-		debugger;
+
 		colorScale = d3.scale.category10().domain(gases)
   	//DATA JOIN
   	pollutionData = svg.selectAll(".weatherCircle").data(function(d) { return lastDate.values });
@@ -127,7 +121,7 @@ function legend(data,svg) {
 
 	var g = legend.append("g")
 	  .attr("class", "legendSize")
-	  .attr("transform", "translate(20, 40)");
+	  .attr("transform", "translate(60, 40)");
 
 	var legendSize = d3.legend.size()
 		.cells(8)
@@ -135,10 +129,13 @@ function legend(data,svg) {
 	  .shape('circle')
 	  .shapePadding(30)
 	  .labelOffset(20)
+	  .labelFormat(d3.format("f"))
 	  .orient('horizontal');
 
 	legend.select(".legendSize")
 	  .call(legendSize);
+
+	 var circle = d3.selectAll('circle').style("opacity",.6)
 }
 
 function makeActive(selection) {
